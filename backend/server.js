@@ -268,6 +268,44 @@ app.get('/api/parking-slots', (req, res) => {
   });
 });
 
+app.post('/api/parking-slots', (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
+
+  const { slotNumber, slotStatus } = req.body;
+
+  if (!slotNumber) {
+    return res.status(400).json({ message: 'Slot number is required' });
+  }
+
+  // Check if slot already exists
+  db.query('SELECT * FROM parkingslot WHERE slotNumber = ?', [slotNumber], (err, results) => {
+    if (err) {
+      console.error('Error checking parking slot:', err);
+      return res.status(500).json({ message: 'Server error' });
+    }
+
+    if (results.length > 0) {
+      return res.status(400).json({ message: 'Parking slot already exists' });
+    }
+
+    // Insert new slot
+    db.query(
+      'INSERT INTO parkingslot (slotNumber, slotStatus) VALUES (?, ?)',
+      [slotNumber, slotStatus || 'available'],
+      (err) => {
+        if (err) {
+          console.error('Error adding parking slot:', err);
+          return res.status(500).json({ message: 'Server error' });
+        }
+
+        res.status(201).json({ message: 'Parking slot added successfully' });
+      }
+    );
+  });
+});
+
 app.put('/api/parking-slots/:slotNumber', (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ message: 'Not authenticated' });
@@ -288,6 +326,54 @@ app.put('/api/parking-slots/:slotNumber', (req, res) => {
       res.json({ message: 'Parking slot updated successfully' });
     }
   );
+});
+
+app.delete('/api/parking-slots/:slotNumber', (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
+
+  const { slotNumber } = req.params;
+
+  // Check if slot is occupied
+  db.query('SELECT * FROM parkingslot WHERE slotNumber = ?', [slotNumber], (err, results) => {
+    if (err) {
+      console.error('Error checking parking slot:', err);
+      return res.status(500).json({ message: 'Server error' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'Parking slot not found' });
+    }
+
+    if (results[0].slotStatus === 'occupied') {
+      return res.status(400).json({ message: 'Cannot delete an occupied parking slot' });
+    }
+
+    // Check if slot is referenced in any parking records
+    db.query('SELECT * FROM parkingrecord WHERE slotNumber = ?', [slotNumber], (err, results) => {
+      if (err) {
+        console.error('Error checking parking records:', err);
+        return res.status(500).json({ message: 'Server error' });
+      }
+
+      if (results.length > 0) {
+        return res.status(400).json({
+          message: 'Cannot delete this parking slot as it has associated parking records'
+        });
+      }
+
+      // Delete the slot
+      db.query('DELETE FROM parkingslot WHERE slotNumber = ?', [slotNumber], (err) => {
+        if (err) {
+          console.error('Error deleting parking slot:', err);
+          return res.status(500).json({ message: 'Server error' });
+        }
+
+        res.json({ message: 'Parking slot deleted successfully' });
+      });
+    });
+  });
 });
 
 // Car Routes
