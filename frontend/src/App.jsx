@@ -11,6 +11,7 @@ import ParkingSlots from './components/parking/ParkingSlots';
 import CarEntry from './components/parking/CarEntry';
 import CarExit from './components/parking/CarExit';
 import Reports from './components/reports/Reports';
+import Payments from './components/payments/Payments';
 import Layout from './components/layout/Layout';
 
 // Set axios defaults
@@ -70,6 +71,7 @@ const App = () => {
       <Route path="/parking-slots" element={<ProtectedRoute><ParkingSlots /></ProtectedRoute>} />
       <Route path="/car-entry" element={<ProtectedRoute><CarEntry /></ProtectedRoute>} />
       <Route path="/car-exit" element={<ProtectedRoute><CarExit /></ProtectedRoute>} />
+      <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/" />} />

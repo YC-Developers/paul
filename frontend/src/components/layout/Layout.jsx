@@ -1,18 +1,19 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LogOut, Car, Home, Calendar, Grid } from 'lucide-react';
+import { LogOut, Car, Home, Calendar, Grid, DollarSign } from 'lucide-react';
 
 const Layout = ({ children, user, onLogout }) => {
   const location = useLocation();
-  
+
   // Navigation items
   const navItems = [
     { path: '/', label: 'Dashboard', icon: <Home size={20} /> },
     { path: '/parking-slots', label: 'Parking Slots', icon: <Grid size={20} /> },
     { path: '/car-entry', label: 'Car Entry', icon: <Car size={20} /> },
     { path: '/car-exit', label: 'Car Exit', icon: <Car size={20} /> },
+    { path: '/payments', label: 'Payments', icon: <DollarSign size={20} /> },
     { path: '/reports', label: 'Reports', icon: <Calendar size={20} /> },
   ];
-  
+
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
@@ -21,7 +22,7 @@ const Layout = ({ children, user, onLogout }) => {
           <h1 className="text-2xl font-bold">SmartPark</h1>
           <p className="text-sm text-gray-400">Parking Management</p>
         </div>
-        
+
         <nav className="mt-6">
           <ul>
             {navItems.map((item) => (
@@ -41,7 +42,7 @@ const Layout = ({ children, user, onLogout }) => {
             ))}
           </ul>
         </nav>
-        
+
         <div className="absolute bottom-0 w-64 border-t border-gray-800">
           <button
             onClick={onLogout}
@@ -52,7 +53,7 @@ const Layout = ({ children, user, onLogout }) => {
           </button>
         </div>
       </div>
-      
+
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
@@ -65,7 +66,7 @@ const Layout = ({ children, user, onLogout }) => {
             </div>
           </div>
         </header>
-        
+
         {/* Content */}
         <main className="flex-1 overflow-y-auto p-6 bg-gray-100">
           {children}

@@ -6,9 +6,11 @@ SmartPark is a web-based parking management system for a company located in Ruba
 
 - User authentication (login/register)
 - Dashboard with real-time statistics
-- Parking slot management
+- Parking slot management (add/delete slots)
 - Car entry and exit processing
-- Automatic fee calculation
+- Automatic fee calculation (500 RWF per hour)
+- Bill generation with detailed information
+- Payment records and receipt printing
 - Daily reports generation
 - Responsive design
 
@@ -76,15 +78,18 @@ The application will be available at http://localhost:5173
 2. Log in with your credentials
 3. Use the sidebar navigation to access different features:
    - Dashboard: View overall statistics
-   - Parking Slots: View all parking slots and their status
+   - Parking Slots: View all parking slots and their status, add or delete slots
    - Car Entry: Record a new car entering the parking lot
    - Car Exit: Process a car leaving the parking lot and calculate fees
-   - Reports: Generate and view daily reports
+   - Payments: View payment records, print receipts, and generate reports
+   - Reports: Generate and view daily reports with detailed information
 
 ## Default Settings
 
-- Default hourly parking rate: $5 (can be adjusted when processing car exits)
+- Fixed hourly parking rate: 500 RWF per hour
+- Any duration under one hour is still charged the full hourly rate
 - The system automatically creates 20 parking slots on first run
+- Additional parking slots can be added through the UI
 
 ## License
 

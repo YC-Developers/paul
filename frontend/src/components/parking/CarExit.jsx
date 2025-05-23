@@ -7,9 +7,9 @@ const CarExit = () => {
   const [activeCars, setActiveCars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCar, setSelectedCar] = useState(null);
-  const [hourlyRate, setHourlyRate] = useState(5); // Default hourly rate in dollars
   const [processing, setProcessing] = useState(false);
   const [receipt, setReceipt] = useState(null);
+  const hourlyRate = 500; // Fixed rate of 500 RWF per hour
 
   useEffect(() => {
     fetchActiveCars();
@@ -32,31 +32,26 @@ const CarExit = () => {
     setReceipt(null);
   };
 
-  const handleRateChange = (e) => {
-    setHourlyRate(parseFloat(e.target.value));
-  };
-
   const handleProcessExit = async () => {
     if (!selectedCar) {
       toast.error('Please select a car');
       return;
     }
-    
+
     setProcessing(true);
-    
+
     try {
       const { data } = await axios.post('/api/parking-records/exit', {
-        parkingRecordId: selectedCar.id,
-        hourlyRate
+        parkingRecordId: selectedCar.id
       });
-      
+
       setReceipt({
         ...data,
         car: selectedCar
       });
-      
+
       toast.success('Car exit processed successfully');
-      
+
       // Refresh active cars
       fetchActiveCars();
       setSelectedCar(null);
@@ -90,11 +85,11 @@ const CarExit = () => {
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Car Exit</h1>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Active Cars</h2>
-          
+
           {activeCars.length === 0 ? (
             <p className="text-gray-500">No active cars in the parking lot</p>
           ) : (
@@ -128,12 +123,12 @@ const CarExit = () => {
             </div>
           )}
         </div>
-        
+
         <div className="bg-white rounded-lg shadow-md p-6">
           {receipt ? (
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Payment Receipt</h2>
-              
+
               <div className="border-t border-b border-gray-200 py-4 my-4">
                 <div className="flex justify-between mb-2">
                   <span className="text-gray-600">Plate Number:</span>
@@ -153,15 +148,15 @@ const CarExit = () => {
                 </div>
                 <div className="flex justify-between mb-2">
                   <span className="text-gray-600">Hourly Rate:</span>
-                  <span>${hourlyRate.toFixed(2)}</span>
+                  <span>500 RWF</span>
                 </div>
               </div>
-              
+
               <div className="flex justify-between items-center text-xl font-bold">
                 <span>Total Amount:</span>
-                <span>${receipt.amount.toFixed(2)}</span>
+                <span>{receipt.amount.toLocaleString()} RWF</span>
               </div>
-              
+
               <button
                 onClick={() => setReceipt(null)}
                 className="mt-6 w-full bg-gray-900 text-white py-2 px-4 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 transition-colors"
@@ -172,7 +167,7 @@ const CarExit = () => {
           ) : (
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Process Exit</h2>
-              
+
               {selectedCar ? (
                 <div>
                   <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
@@ -184,22 +179,16 @@ const CarExit = () => {
                       Entry Time: {formatDateTime(selectedCar.entryTime)}
                     </p>
                   </div>
-                  
+
                   <div className="mb-6">
-                    <label htmlFor="hourlyRate" className="block text-sm font-medium text-gray-700 mb-1">
-                      Hourly Rate ($)
-                    </label>
-                    <input
-                      type="number"
-                      id="hourlyRate"
-                      value={hourlyRate}
-                      onChange={handleRateChange}
-                      min="1"
-                      step="0.01"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
-                    />
+                    <div className="block text-sm font-medium text-gray-700 mb-1">
+                      Hourly Rate
+                    </div>
+                    <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
+                      500 RWF per hour
+                    </div>
                   </div>
-                  
+
                   <button
                     onClick={handleProcessExit}
                     disabled={processing}

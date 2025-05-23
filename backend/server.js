@@ -539,10 +539,11 @@ app.post('/api/parking-records/exit', (req, res) => {
     return res.status(401).json({ message: 'Not authenticated' });
   }
 
-  const { parkingRecordId, hourlyRate } = req.body;
+  const { parkingRecordId } = req.body;
+  const hourlyRate = 500; // Fixed rate of 500 RWF per hour
 
-  if (!parkingRecordId || !hourlyRate) {
-    return res.status(400).json({ message: 'Parking record ID and hourly rate are required' });
+  if (!parkingRecordId) {
+    return res.status(400).json({ message: 'Parking record ID is required' });
   }
 
   // Get parking record
@@ -564,10 +565,11 @@ app.post('/api/parking-records/exit', (req, res) => {
       const exitTime = new Date();
 
       // Calculate duration in hours (rounded up to nearest hour)
+      // Any duration under one hour is still charged the full hourly rate
       const durationMs = exitTime - entryTime;
-      const durationHours = Math.ceil(durationMs / (1000 * 60 * 60));
+      const durationHours = Math.max(1, Math.ceil(durationMs / (1000 * 60 * 60)));
 
-      // Calculate amount
+      // Calculate amount (500 RWF per hour)
       const amount = durationHours * hourlyRate;
 
       // Begin transaction
@@ -658,6 +660,100 @@ app.get('/api/parking-records/active', (req, res) => {
       }
 
       res.json(results);
+    }
+  );
+});
+
+// Payments Routes
+app.get('/api/payments', (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
+
+  const { startDate, endDate } = req.query;
+
+  let query = `
+    SELECT
+      p.id as paymentId,
+      p.amountPaid,
+      p.paymentDate,
+      pr.plateNumber,
+      pr.slotNumber,
+      pr.entryTime,
+      pr.exitTime,
+      pr.duration,
+      c.driverName,
+      c.phoneNumber,
+      u.username as receivedBy
+    FROM payment p
+    JOIN parkingrecord pr ON p.parkingRecordId = pr.id
+    JOIN car c ON pr.plateNumber = c.plateNumber
+    JOIN users u ON p.userId = u.id
+  `;
+
+  const queryParams = [];
+
+  if (startDate && endDate) {
+    query += ` WHERE DATE(p.paymentDate) BETWEEN ? AND ?`;
+    queryParams.push(startDate, endDate);
+  } else if (startDate) {
+    query += ` WHERE DATE(p.paymentDate) >= ?`;
+    queryParams.push(startDate);
+  } else if (endDate) {
+    query += ` WHERE DATE(p.paymentDate) <= ?`;
+    queryParams.push(endDate);
+  }
+
+  query += ` ORDER BY p.paymentDate DESC`;
+
+  db.query(query, queryParams, (err, results) => {
+    if (err) {
+      console.error('Error fetching payments:', err);
+      return res.status(500).json({ message: 'Server error' });
+    }
+
+    res.json(results);
+  });
+});
+
+// Get a specific payment by ID
+app.get('/api/payments/:paymentId', (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
+
+  const { paymentId } = req.params;
+
+  db.query(
+    `SELECT
+      p.id as paymentId,
+      p.amountPaid,
+      p.paymentDate,
+      pr.plateNumber,
+      pr.slotNumber,
+      pr.entryTime,
+      pr.exitTime,
+      pr.duration,
+      c.driverName,
+      c.phoneNumber,
+      u.username as receivedBy
+     FROM payment p
+     JOIN parkingrecord pr ON p.parkingRecordId = pr.id
+     JOIN car c ON pr.plateNumber = c.plateNumber
+     JOIN users u ON p.userId = u.id
+     WHERE p.id = ?`,
+    [paymentId],
+    (err, results) => {
+      if (err) {
+        console.error('Error fetching payment:', err);
+        return res.status(500).json({ message: 'Server error' });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ message: 'Payment not found' });
+      }
+
+      res.json(results[0]);
     }
   );
 });
